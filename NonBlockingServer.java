@@ -11,6 +11,7 @@ public class NonBlockingServer {
         ServerSocketChannel serverChannel = ServerSocketChannel.open();
         serverChannel.configureBlocking(false);
         serverChannel.socket().bind(new InetSocketAddress(port));
+        System.out.println("Server started on port " + port);
 
         Selector selector = Selector.open();
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
@@ -41,16 +42,19 @@ public class NonBlockingServer {
     private static void register(Selector selector, ServerSocketChannel serverChannel) throws IOException {
         SocketChannel client = serverChannel.accept();
         client.configureBlocking(false);
+        System.out.println("Accepted connection from " + client);
         client.register(selector, SelectionKey.OP_READ);
     }
 
     private static void answerWithEcho(ByteBuffer buffer, SelectionKey key) throws IOException {
         SocketChannel client = (SocketChannel) key.channel();
-        client.read(buffer);
-        if (new String(buffer.array()).trim().length() > 0) {
+        buffer.clear();
+        int read = client.read(buffer);
+        if (read > 0) {
             buffer.flip();
-            client.write(buffer);
-            buffer.clear();
+            while(buffer.hasRemaining()) {
+                client.write(buffer);
+            }
         }
     }
 }
