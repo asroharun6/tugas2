@@ -7,6 +7,7 @@ public class NonBlockingClient {
     public static void main(String[] args) throws IOException {
         InetSocketAddress hostAddress = new InetSocketAddress("localhost", 1234);
         SocketChannel client = SocketChannel.open(hostAddress);
+        client.configureBlocking(false);
 
         System.out.println("Client started");
 
@@ -15,13 +16,14 @@ public class NonBlockingClient {
 
         String line;
         while ((line = reader.readLine()) != null) {
+            buffer.clear();
             buffer.put(line.getBytes());
             buffer.flip();
-            client.write(buffer);
-            buffer.clear();
+            while(buffer.hasRemaining()) {
+                client.write(buffer);
+            }
         }
 
         client.close();
     }
 }
-// Java Document
